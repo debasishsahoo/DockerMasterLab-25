@@ -1,0 +1,45 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies (installed inside container)
+node_modules
+
+# Docker files (prevent recursive context)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment files (secrets!)
+.env
+.env.*
+!.env.example
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Test artifacts
+coverage/
+.nyc_output/
+
+# Build artifacts
+dist/
+build/
+tmp/

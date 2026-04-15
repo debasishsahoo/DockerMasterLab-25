@@ -1,0 +1,20 @@
+# **Challenge 2: Layer Cache Exploitation**
+
+**Objective**: Optimize build time using layer caching
+
+Create a Dockerfile where:
+
+- Dependencies install only when package.json changes
+- Source code changes don't trigger dependency reinstall
+- Build time for code-only changes < 10 seconds
+- Full build completes in under 2 minutes
+
+**Test**:
+
+```bash
+# First build
+time docker build -t cache-test:v1 .
+# Change only source code
+time docker build -t cache-test:v2 .
+# Second build should be <10s
+```
