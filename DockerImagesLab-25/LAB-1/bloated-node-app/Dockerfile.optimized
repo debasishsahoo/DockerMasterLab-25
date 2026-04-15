@@ -1,0 +1,47 @@
+# STAGE 1: Install production dependencies
+FROM node:24-alpine AS dependencies
+
+# Set working directory
+WORKDIR /app
+
+# Copy ONLY the production package file (layer caching!)
+COPY package.json ./package.json
+
+# Install ONLY production dependencies
+# --omit=dev    → skip devDependencies
+# npm cache clean → remove download cache from image
+RUN npm install --omit=dev && npm cache clean --force
+
+# STAGE 2: Final minimal production image
+FROM node:24-alpine AS production
+
+# --- Security: add tini for proper PID 1 handling ---
+RUN apk add --no-cache tini
+
+# --- Security: create non-root user ---
+RUN addgroup -g 1001 -S appgroup && adduser -S appuser -u 1001 -G appgroup
+
+# --- Set working directory ---
+WORKDIR /app
+
+# --- Copy production node_modules from Stage 1 ---
+COPY --from=dependencies --chown=appuser:appgroup /app/node_modules ./node_modules
+
+# --- Copy ONLY the source code we need ---
+COPY --from=dependencies --chown=appuser:appgroup /app/package.json ./package.json
+COPY --chown=appuser:appgroup src/ ./src/
+
+# --- Switch to non-root user ---
+USER appuser
+
+# --- Expose port ---
+EXPOSE 5000
+
+# --- Health check ---
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# --- Use tini as entrypoint for proper signal handling ---
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# --- Start app with node directly (NOT nodemon) ---
+CMD ["node", "src/index.js"]
