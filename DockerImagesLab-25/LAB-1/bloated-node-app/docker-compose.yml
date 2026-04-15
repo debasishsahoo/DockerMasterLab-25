@@ -1,0 +1,43 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+  # Bloated version for comparison
+  # app-bloated:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.bloated
+  #   container_name: node-bloated
+  #   ports:
+  #     - "5000:5000"
+  #   profiles:
+  #     - bloated
+
+  # Optimized version
+  app-optimized:
+    build:
+      context: .
+      dockerfile: Dockerfile.optimized
+    container_name: node-optimized
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "<http://localhost:3000/health>"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
