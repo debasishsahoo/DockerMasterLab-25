@@ -1,0 +1,54 @@
+# Node.js dependencies
+# These will be installed fresh inside the container
+# using npm ci for a clean, reproducible installation
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS-generated files
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# Docker files
+# No need to copy these into the image itself
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+LICENSE
+CHANGELOG.md
+docs/
+
+# Environment files
+# NEVER include these - they may contain secrets
+.env
+.env.*
+*.env
+
+# Test files
+# Keep the image lean for production
+__tests__/
+*.test.js
+*.spec.js
+coverage/
+
+# Logs
+logs/
+*.log

@@ -1,0 +1,23 @@
+
+FROM node:24-alpine
+
+LABEL maintainer="debasish.sahoo96@gmail.com"
+LABEL description="Simple Node.js Docker tutorial application"
+LABEL version="1.0.0"
+LABEL org.opencontainers.image.title="docker-simple-app"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.ENV="development"
+
+
+WORKDIR /usr/src/app
+
+COPY package.json package-lock.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 3001
+
+CMD ["node", "app.js"]
+
