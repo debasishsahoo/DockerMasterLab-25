@@ -1,0 +1,25 @@
+# Python
+FROM python:3.12          # full Debian
+FROM python:3.12-slim     # Debian minimal (preferred)
+FROM python:3.12-alpine   # Alpine (smallest but musl issues)
+
+# Node.js
+FROM node:20
+FROM node:20-slim
+FROM node:20-alpine
+
+# Java
+FROM eclipse-temurin:21-jre       # runtime only (smaller)
+FROM eclipse-temurin:21-jdk       # full JDK for building
+
+# Go (usually scratch or distroless for final stage)
+FROM golang:1.22-alpine AS builder
+FROM scratch AS final
+
+# Nginx
+FROM nginx:stable-alpine
+
+# Distroless (very secure, no shell)
+FROM gcr.io/distroless/python3
+FROM gcr.io/distroless/java21
+FROM gcr.io/distroless/static    # for Go/Rust static binaries

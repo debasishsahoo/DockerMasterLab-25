@@ -1,0 +1,16 @@
+FROM node:20-alpine
+
+WORKDIR /app
+# if bcrypt,sharp,canvas present (Docker image may break.)
+# Safer Alternative (FROM node:20-slim)
+# if FROM openjdk:21-alpine then Program Breaks.
+# then use FROM eclipse-temurin:21-jre and npm manually.
+# Fix: RUN apk add --no-cache libc6-compat
+#
+#
+#
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+CMD ["node", "server.js"]
