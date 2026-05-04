@@ -1,0 +1,6 @@
+{
+  "port": 3000,
+  "env": "development",
+  "apiVersion": "v1",
+  "logLevel": "info"
+}
