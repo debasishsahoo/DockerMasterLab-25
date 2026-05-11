@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # STAGE 1 — BUILD STAGE (dependencies + compile)
 
-FROM node:22-alpine AS build
+FROM node:22-alpine AS builder
 
 ARG APP_VERSION=1.0.0
 ARG NODE_ENV=production

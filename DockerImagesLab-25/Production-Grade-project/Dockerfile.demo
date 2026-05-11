@@ -1,0 +1,16 @@
+# syntax=docker/dockerfile:1          ← BuildKit syntax (always first if used)
+# escape=\                            ← change escape char (Windows: escape=`)
+
+# 1. FROM          — base image
+# 2. ARG           — build-time args (can appear before FROM)
+# 3. LABEL         — metadata
+# 4. ENV           — environment variables
+# 5. RUN           — install dependencies / system setup
+# 6. WORKDIR       — set working directory
+# 7. COPY / ADD    — copy files
+# 8. RUN           — build/compile app
+# 9. EXPOSE        — document port
+# 10. USER         — drop to non-root
+# 11. HEALTHCHECK  — health probe
+# 12. ENTRYPOINT   — main executable
+# 13. CMD          — default arguments

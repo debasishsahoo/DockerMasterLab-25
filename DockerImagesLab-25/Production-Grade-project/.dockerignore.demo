@@ -1,0 +1,119 @@
+# Comment
+pattern               # exclude files matching pattern
+!pattern              # re-include files matching pattern (exception)
+**/pattern            # match in any subdirectory
+pattern/**            # match everything inside directory
+
+# ── Version control ────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# ── Dependencies--------------------------
+node_modules
+.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Build outputs ──────────────────────────────────────
+dist
+build
+out
+.next
+.nuxt
+.output
+
+# ── Environment & secrets(Impotent) ──────────────────────────────
+.env
+.env.*
+!.env.example
+.secret
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
+*.crt
+
+# ── IDE & OS ───────────────────────────────────────────
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ───────────────────────────────────────────────
+logs/
+*.log
+
+# ── Test & coverage ────────────────────────────────────
+coverage
+.nyc_output
+*.test.js
+*.spec.js
+__tests__
+jest.config.js
+.jest*
+
+
+# ── CI/CD config ───────────────────────────────────────
+.github
+.gitlab-ci.yml
+.circleci
+Jenkinsfile
+.travis.yml
+
+# ── Docker files themselves ────────────────────────────
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# ── Documentation ──────────────────────────────────────
+*.md
+docs/
+LICENSE
+
+# ── Temp ───────────────────────────────────────────────
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# ── Cache ──────────────────────────────────────────────
+.cache
+.parcel-cache
+.eslintcache
+.stylelintcache
+
+
+# Advanced .dockerignore patterns ---------------
+# Include specific files from excluded directories
+src/**
+!src/main.js             # but include this one file
+
+# Exclude all .env files except template
+.env*
+!.env.example
+
+# Exclude all test files deeply nested
+**/*.test.ts
+**/*.spec.ts
+**/__tests__/
+
+# Exclude large asset directories
+assets/videos/
+assets/raw/
+!assets/images/          # but keep images
+
+# Multiple Dockerfiles — different ignore per file
+# Docker uses: .dockerignore for Dockerfile
+#              Dockerfile.prod.dockerignore for Dockerfile.prod
+# (BuildKit feature)

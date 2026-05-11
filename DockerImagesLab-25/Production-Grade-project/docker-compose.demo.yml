@@ -1,0 +1,238 @@
+# Version & top-level keys
+version: "3.9" # Compose V2 this is omit
+
+# services   — container definitions
+# networks   — network definitions
+# volumes    — volume definitions
+# configs    — config file management (Swarm) # Use by Kubernetes
+# secrets    — secret management
+# x-*        — extension fields (YAML anchors for reuse)
+
+services:
+  production_app:
+    # ---IMAGE/BUILD---
+    image: production_app:1.0
+    build:
+      context: . # build context (Dockerfile location)
+      dockerfile: Dockerfile # optional if named 'Dockerfile'
+      target: production # for multistage builds
+      args:
+        VERSION: 1.0 # build-time argument
+        NODE_ENV: production
+      cache_from:
+        - production_app:1.0
+      cache_to:
+        - type=inline
+      shm_size: 128m #  shared memory for build
+      extra_hosts:
+        - "host.docker.internal:host-gateway" # for build-time network access
+
+    # ── CONTAINER IDENTITY ────────────────────────────
+    container_name: production_app_container # custom name (instead of auto-generated)
+    hostname: production_app_host # container's hostname
+    domainname: example.com # container's domain name
+
+    # ── STARTUP ───────────────────────────────────────
+    restart: unless-stopped # restart policy (no, always, on-failure, unless-stopped)
+    command: ["npm", "start"] #
+    entrypoint: ["/app/entrypoint.sh"] # override default entrypoint
+    # tini is a tiny init process for containers to handle signals and  and it will start from PID 1
+    init: true # use tini for proper signal handling, prevents zombie processes
+    working_dir: /app # override WORKDIR
+    user: "1001:1001" # override USER (UID:GID)
+    group_add:
+      - "audio" # add to additional group (by name)
+      - "video" # add to additional group (by name)
+    # ── PORTS ─────────────────────────────────────────
+    ports:
+      - "3000:3000" # host:container
+      - "3001" # container-only (random host port)
+      - "8080:80" # host:container
+      - "127.0.0.1:8080:80" # bind to interface
+      - "8080-8090:80-90" # range mapping
+      - target: 80 # long form
+        published: 8080
+        protocol: tcp
+        mode: host
+    expose:
+      - "80" # container-only (no host mapping)
+    # ── ENVIRONMENT ───────────────────────────────────
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://db:5432/mydb
+    #      - NODE_ENV= production
+    #      - PORT=3000
+    #      - DATABASE_URL=postgres://db:5432/mydb
+    env_file:
+      - .env.production # load environment variables from file
+    # ── VOLUMES ───────────────────────────────────────
+    volumes:
+      - app_data:/app/data # named volume
+      - ./logs:/app/logs # bind mount (host:container)
+      - ./config:/app/config:ro # read-only bind mount (host:container)
+      - /tmp:/tmp:tmpfs # tmpfs mount (in-memory) volatile storage
+        #Long syntax for bind mount
+      - type: bind
+        source: ./config
+        target: /app/config
+        read_only: true # read-only bind mount
+      - type: volume # Long syntax for named volume
+        source: app_data
+        target: /app/data
+        volume:
+          nocopy: true # do not populate volume with container data
+      - type: tmpfs # Long syntax for tmpfs mount
+        target: /tmp
+        tmpfs:
+          size: 64m # limit tmpfs size
+
+        #tmpfs:
+        #  mode: 1777 # permissions for tmpfs
+        #  uid: 1001 # owner UID for tmpfs
+        #  gid: 1001 # owner GID for tmpfs
+        #- /run
+        #- /tmp:size=64m,mode=1777,uid=1001,gid=1001 # combined options for tmpfs
+      # ── NETWORKS ──────────────────────────────────────
+    networks:
+      frontend: # connect to 'frontend' network
+        aliases:
+          - webapp
+      backend: # connect to 'backend' network
+        aliases:
+          - api
+        ipv4_address: 127.20.0.10 # static IP (if using custom subnet)
+      # ── DEPENDENCIES ───────────────────────────────
+    depends_on:
+      db: # wait for 'db' service to start (no health check)
+        condition: service_healthy # wait for db to be healthy
+      redis: # wait for 'redis' service to start (no health check)
+        condition: service_started # wait for redis to start (no health check)
+      migrate: # wait for 'migrate' service to complete (no health check)
+        condition: service_completed_successfully # wait for migrate to complete successfully
+    # ── HEALTHCHECK ───────────────────────────────────
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"] # command to check health
+      interval: 30s # time between checks
+      timeout: 10s # time to wait for response
+      retries: 3 # number of retries before unhealthy
+      start_period: 30s # time to wait before starting health checks
+    # Disable:
+    # healthcheck:
+    #   disable: true
+    # ── RESOURCE LIMITS ────────────────────────────────────
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5" # limit to 50% of CPU
+          memory: 512M # limit to 512MB RAM
+        reservations:
+          cpus: "0.25" # reserve 25% of CPU
+          memory: 256M # reserve 256MB RAM
+      replicas: 3 # scale to 3 instances (Swarm mode)
+    # Compose v2 also supports (non-Swarm):
+    mem_limit: 512m
+    mem_reservation: 128m
+    cpus: 1.0
+    # ── LOGGING ─────
+    logging:
+      driver: "json-file" # logging driver (json-file, syslog, fluentd, etc.)
+      options:
+        max-size: "10m" # rotate after 10MB
+        max-file: "5" # keep 5 rotated files
+        tag: "{{.Name}}/{{.ID}}" # log tag format
+    # ── SECURITY ──────────────
+    security_opt:
+      - no-new-privileges:true # prevent privilege escalation
+      - seccomp:unconfined # disable seccomp (not recommended)
+      - apparmor:unconfined # disable AppArmor (not recommended)
+      - label:type:production_app # custom SELinux label
+    cap_add:
+      - NET_ADMIN # add capabilities (e.g. NET_ADMIN for network management)
+    cap_drop:
+      - ALL # drop all capabilities (more secure)
+    read_only: true # make filesystem read-only
+    privileged: false # never true in production
+
+    # ── LABELS ────────────────────────────────────────
+    labels:
+      com.example.app: "production_app" # custom label for metadata
+      com.example.version: "1.0" # custom label for version
+      com.example.environment: "production" # custom label for environment
+      traefik.enable: "true" # example for Traefik reverse proxy
+      traefik.http.routers.production_app.rule: "Host(`app.example.com`)"
+    # ── RUNTIME CONFIG ──────────────────────────────────────
+    runtime: nvidia # use NVIDIA runtime for GPU support
+    devices:
+      - "/dev/nvidia0:/dev/nvidia0" # pass through GPU device
+      - "/dev/nvidiactl:/dev/nvidiactl"
+      - "/dev/nvidia-modeset:/dev/nvidia-modeset"
+    stdin_open: true # -i flag # keep STDIN open (for interactive processes)
+    tty: true # -t flag # allocate a pseudo-TTY (for interactive processes)
+    ipc: host # use host IPC namespace (for shared memory)
+    pid: host # use host PID namespace (for process management)
+    shm_size: 128m # /dev/shm size
+
+    ulimits: # set ulimits for the container
+      nproc: 65535 # max number of processes
+      nofile:
+        soft: 20000 # soft limit for open files
+        hard: 40000 # hard limit for open files
+
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: 0
+    # ── LINKS & ALIASES (legacy) ──────────────────────
+    # Avoid links — use networks instead
+    # links:
+    #   - db:database
+    #   - redis:cache
+    # ── EXTRA HOSTS ───────────────────────────────────
+    extra_hosts:
+      - "myhost:192.168.1.100"
+      - "host.docker.internal:host-gateway"
+
+    # ── DNS ───────────────────────────────────────────
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    dns_search:
+      - example.com
+    # ── PROFILES ──────────────────────────────────────
+    profiles:
+      - debug # only started with: docker compose --profile
+      - production
+      - staging
+      - test
+      - development
+      - ci
+      - e2e
+      - monitoring
+      - logging
+      - metrics
+      - tracing
+      - security
+      - performance
+      - gpu
+      - database
+      - cache
+      - worker
+      - migrate
+      - web
+      - api
+      - frontend
+      - backend
+      - admin
+      - cron
+      - scheduler
+    # ── SECRETS ───────────────────────────────────────
+    secrets:
+      - db_password
+      - source: api_key # long form
+        target: /run/secrets/api_key
+        mode: 0400
+
+    # ── CONFIGS ───────────────────────────────────────
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+        mode: 0444
