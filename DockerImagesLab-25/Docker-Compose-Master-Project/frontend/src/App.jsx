@@ -66,7 +66,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🐳 Docker Teaching Application</h1>
+        <h1>Docker Teaching Application</h1>
         <p>Learn Docker Compose with Node.js and React</p>
       </header>
 
@@ -74,7 +74,7 @@ function App() {
         <HealthCheck />
 
         <section className="todo-section">
-          <h2>📝 Learning Tasks</h2>
+          <h2>Learning Tasks</h2>
 
           <form onSubmit={addItem} className="add-item-form">
             <input
